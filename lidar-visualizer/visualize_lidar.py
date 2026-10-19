@@ -16,9 +16,20 @@ DISPLAY_INTERVAL = 0.1  # Update plot 10 times per second
 
 master, slave = pty.openpty()
 
+
+SDK_PATH = os.path.expanduser("~/FRI/rplidar_sdk")
+
+executable = os.path.join(
+    SDK_PATH,
+    "output",
+    "Darwin",
+    "Release",
+    "ultra_simple"
+)
+
 process = subprocess.Popen(
     [
-        "./output/Darwin/Release/ultra_simple",
+        executable,
         "--channel", "--serial", PORT, BAUD
     ],
     stdout=slave,
