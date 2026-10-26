@@ -5,7 +5,9 @@ import subprocess
 import select
 import pty
 import os
+import sys
 import time
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 
@@ -17,19 +19,19 @@ DISPLAY_INTERVAL = 0.1  # Update plot 10 times per second
 master, slave = pty.openpty()
 
 
-SDK_PATH = os.path.expanduser("~/FRI/rplidar_sdk")
-
-executable = os.path.join(
-    SDK_PATH,
-    "output",
-    "Darwin",
-    "Release",
-    "ultra_simple"
+sdk_platform = "Darwin" if sys.platform == "darwin" else "Linux"
+executable = (
+    Path(__file__).resolve().parents[1]
+    / "rplidar_sdk"
+    / "output"
+    / sdk_platform
+    / "Release"
+    / "ultra_simple"
 )
 
 process = subprocess.Popen(
     [
-        executable,
+        str(executable),
         "--channel", "--serial", PORT, BAUD
     ],
     stdout=slave,
