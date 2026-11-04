@@ -233,11 +233,12 @@ static void lidar_decode_node(
         (uint16_t)b[3] |
         ((uint16_t)b[4] << 8);
 
-    node->angle_deg =
-        (float)angle_q6 / LIDAR_ANGLE_SCALE;
-
+    node->angle_deg = 
+        (int)angle_q6 >> LIDAR_ANGLE_SCALE; // /64
+    //Both scales are powers of 2, we could bit shift over division, look into this
+    //Also do we even need decimal level accuracy if we are simply encoding vibrations
     node->distance_mm =
-        (float)distance_q2 / LIDAR_DISTANCE_SCALE;
+        (int)distance_q2 >> LIDAR_DISTANCE_SCALE; // /4
 
     node->quality = b[0] >> 2;
 }

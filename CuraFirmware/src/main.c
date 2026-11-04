@@ -14,6 +14,8 @@
 #define RAW_BUFFER_SIZE  512
 #define NODE_BUFFER_SIZE 100
 
+#define MAX_RUN 50
+
 static const char *TAG = "MAIN";
 
 static void lidar_task(void *arg)
@@ -23,16 +25,19 @@ static void lidar_task(void *arg)
 
     lidar_decoder_t decoder;
     lidar_decoder_init(&decoder);
+    static int count = 0;
 
     while (1)
     {
+        vTaskDelay(10);
+
         int bytes_read = uart_read_bytes(
             LIDAR_UART, 
             raw_data, 
             sizeof(raw_data), 
             pdMS_TO_TICKS(100)
         );
-
+        
         if (bytes_read <= 0) { continue; }
 
         size_t decoded_count = 0;
@@ -56,12 +61,13 @@ static void lidar_task(void *arg)
         {
             ESP_LOGI(
                 TAG,
-                "r=%.1f mm, theta=%.2f deg, quality=%u",
+                "r=%u mm, theta=%u deg, quality=%u",
                 nodes[i].distance_mm,
                 nodes[i].angle_deg,
                 nodes[i].quality
             );
-        }
+        }  
+        count++;
     }
 
     /* Unreachable in normal operation; retain for future shutdown support. */
@@ -69,9 +75,8 @@ static void lidar_task(void *arg)
     vTaskDelete(NULL);
 }
 
-
 void app_main(void)
-{
+{ //TODO: Need to have shutdown support to stop scan
     esp_err_t err = lidar_uart_init(
         LIDAR_UART,
         LIDAR_TX_PIN,
@@ -83,7 +88,7 @@ void app_main(void)
                  esp_err_to_name(err));
         return;
     }
-
+    vTaskDelay(pdMS_TO_TICKS(3000));
     err = lidar_start_scan(LIDAR_UART);
 
     if (err != ESP_OK) {
@@ -91,7 +96,11 @@ void app_main(void)
                  esp_err_to_name(err));
         return;
     }
-
+    else 
+    {
+        ESP_LOGI(TAG, "Scan started correctly");
+    }
+    
     BaseType_t task_created = xTaskCreate(
         lidar_task,
         "lidar_task",
@@ -105,4 +114,5 @@ void app_main(void)
         ESP_LOGE(TAG, "Failed to create LIDAR task");
         lidar_stop_scan(LIDAR_UART);
     }
+    while(1){vTaskDelay(pdMS_TO_TICKS(1000));}
 }

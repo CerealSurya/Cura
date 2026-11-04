@@ -39,15 +39,15 @@
 #define LIDAR_NODE_SYNC_MASK        0x01
 #define LIDAR_NODE_ANGLE_CHECK_MASK 0x01
 
-#define LIDAR_ANGLE_SCALE           64.0f
-#define LIDAR_DISTANCE_SCALE        4.0f
+#define LIDAR_ANGLE_SCALE           6U //64.0f, 2^6 = 64
+#define LIDAR_DISTANCE_SCALE        2U //2^2 = 4
 #define LIDAR_FULL_ROTATION_DEG     360.0f
 
 /* ==================== Data Structures ==================== */
 
 typedef struct {
-    float angle_deg;
-    float distance_mm;
+    uint32_t angle_deg;
+    uint32_t distance_mm;
     uint8_t quality;
 } lidar_node_t;
 
