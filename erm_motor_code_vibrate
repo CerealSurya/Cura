@@ -1,0 +1,52 @@
+#include <Wire.h>
+#include "Adafruit_DRV2605.h"
+
+Adafruit_DRV2605 haptic;
+
+void setup() {
+  Serial.begin(115200);
+  delay(1000);
+  Serial.println("-------------------------------------");
+  Serial.println("DRV2605L Standalone Motor Test Start");
+  Serial.println("-------------------------------------");
+
+  // Initialize I2C communication on the ESP32 (SDA = 21, SCL = 22)
+  Wire.begin();
+
+  if (!haptic.begin()) {
+    Serial.println("ERROR: Could not find DRV2605L chip!");
+    Serial.println("Please double check your SDA/SCL and Power wiring.");
+    while (1); // Halt execution if hardware isn't found
+  }
+
+  // Configure the driver for an ERM (Eccentric Rotating Mass) motor
+  haptic.selectLibrary(1);             // Library #1 is standard ERM effects
+  haptic.setMode(DRV2605_MODE_INTTRIG); // Internal Trigger Mode (Standard)
+  
+  Serial.println("Success! DRV2605L initialized. Starting motor sweep...");
+}
+
+void loop() {
+  
+  // TEST 1: Light Pulse (Like a subtle smartphone notification)
+  Serial.println("Playing: Light Notification Click (Effect #1)");
+  haptic.setWaveform(0, 1);  // Waveform slot 0 = Effect 1 (Strong Click - 100%)
+  haptic.setWaveform(1, 0);  // Waveform slot 1 = 0 (Signals the end of the sequence)
+  haptic.go();               // Tell the chip to execute the vibration
+  delay(1500);               // Wait 1.5 seconds
+
+  // TEST 2: Sharp / Double Alert Pulse (Proximity warning style)
+  Serial.println("Playing: Sharp Alert Pulse (Effect #4)");
+  haptic.setWaveform(0, 4);  // Waveform slot 0 = Effect 4 (Sharp Click - 100%)
+  haptic.setWaveform(1, 0);  
+  haptic.go();               
+  delay(1500);               
+
+  // TEST 3: Strong Continuous Buzz (Critical alert style)
+  Serial.println("Playing: Continuous Long Buzz (Effect #47)");
+  haptic.setWaveform(0, 47); // Waveform slot 0 = Effect 47 (Buzz 1 - 100%)
+  haptic.setWaveform(1, 0);  
+  haptic.go();               
+  delay(2500);               // Let it buzz and pause a bit longer before repeating
+}
+
