@@ -19,6 +19,10 @@
 #define LIDAR_CMD_START_SCAN        0x20
 #define LIDAR_CMD_STOP_SCAN         0x25
 
+#define LIDAR_CMD_SET_MOTOR_PWM        0xA8
+#define LIDAR_MOTOR_PWM_PAYLOAD_LEN    0x02
+#define LIDAR_MOTOR_PWM_MAX            1023
+
 /* ==================== Response Constants ==================== */
 
 #define LIDAR_DESC_SYNC_1           0xA5
@@ -64,6 +68,9 @@ esp_err_t lidar_uart_init(
     int tx_pin,
     int rx_pin
 );
+
+//Set Max motor speed
+esp_err_t lidar_set_motor_max(uart_port_t uart_num);
 
 /* Start or stop scanning. */
 esp_err_t lidar_start_scan(uart_port_t uart_num);

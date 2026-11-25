@@ -141,7 +141,52 @@ static bool lidar_validate_scan_descriptor(
            d[5] == LIDAR_DESC_SIZE_MODE &&
            d[6] == LIDAR_DESC_TYPE;
 }
+/* ==================== Prive Motor Control ==================== */
+/* Motor PWM is a 16-bit little-endian value; 1023 is the max. */
+static esp_err_t lidar_set_motor_pwm(
+    uart_port_t uart_num,
+    uint16_t pwm)
+{
+    if (pwm > LIDAR_MOTOR_PWM_MAX) {
+        pwm = LIDAR_MOTOR_PWM_MAX;
+    }
 
+    uint8_t packet[] = {
+        LIDAR_CMD_SYNC,
+        LIDAR_CMD_SET_MOTOR_PWM,
+        LIDAR_MOTOR_PWM_PAYLOAD_LEN,
+        (uint8_t)(pwm & 0xFF),
+        (uint8_t)(pwm >> 8),
+        0  /* checksum, filled below */
+    };
+
+    /* Checksum is the XOR of every preceding byte. */
+    uint8_t checksum = 0;
+    for (size_t i = 0; i < sizeof(packet) - 1; i++) {
+        checksum ^= packet[i];
+    }
+    packet[sizeof(packet) - 1] = checksum;
+
+    int written = uart_write_bytes(
+        uart_num,
+        packet,
+        sizeof(packet)
+    );
+
+    if (written != (int)sizeof(packet)) {
+        return ESP_FAIL;
+    }
+
+    return uart_wait_tx_done(
+        uart_num,
+        pdMS_TO_TICKS(LIDAR_COMMAND_TIMEOUT_MS)
+    );
+}
+/* ==================== Public Motor Control ==================== */
+esp_err_t lidar_set_motor_max(uart_port_t uart_num)
+{
+    return lidar_set_motor_pwm(uart_num, LIDAR_MOTOR_PWM_MAX);
+}
 /* ==================== Public Scan Control ==================== */
 
 esp_err_t lidar_start_scan(uart_port_t uart_num)
